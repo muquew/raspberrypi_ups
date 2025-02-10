@@ -1,0 +1,9 @@
+/ooo/ups/logs/ups_monitor.log { 
+  copytruncate
+  rotate 12
+  monthly
+  dateext
+  compress
+  missingok
+  notifempty
+}

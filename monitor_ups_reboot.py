@@ -24,7 +24,7 @@ ina219 = INA219(addr=0x41)
 # 电量阈值
 LOW_PERCENT = 80.0   # 电量低于 80% 时表示掉电
 REBOOT_SIGNAL_COUNT = 3  # 需要 3 次 "掉电->恢复" 触发重启
-DETECTION_WINDOW = 20  # 监测窗口时间 (秒)
+detection_time = 30 # 监测窗口时间 (秒)
 
 # 计数器
 reboot_signals = 0
@@ -32,9 +32,9 @@ start_time = time.time()
 last_state = "high"  # 最后一次的电量状态，高或低
 transition_count = 0  # 记录从低到高电量的次数
 
-logging.info("🕵️  进入 UPS 20s 监测模式...")
+logging.info(f"🕵️  进入 UPS {detection_time}s 监测模式...")
 
-while time.time() - start_time < DETECTION_WINDOW:
+while time.time() - start_time < detection_time:
     bus_voltage = ina219.getBusVoltage_V()
     p = (bus_voltage - 9) / 3.6 * 100
     p = max(0, min(100, p))
@@ -58,9 +58,9 @@ while time.time() - start_time < DETECTION_WINDOW:
     # 达到 3 次电量恢复信号，触发重启
     if transition_count >= REBOOT_SIGNAL_COUNT:
         logging.error("✅ 触发重启信号！系统即将重启...")
-        # os.system("sudo reboot")
+        os.system("sudo reboot")
         break
 
     time.sleep(2)  # 采样周期
 
-logging.info("🛑 20s 监测结束，未触发重启")
+logging.info(f"🛑 {detection_time}s 监测结束，未触发重启")

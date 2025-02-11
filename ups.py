@@ -46,6 +46,7 @@ if __name__ == '__main__':
     last_percent = 100.0  # 假设开始时电量为100%
     is_waiting_for_recovery = False  # 是否处于等待恢复的状态
     recovery_start_time = 0  # 等待恢复的开始时间
+    wait_time = 5
 
     while True:
         bus_voltage = ina219.getBusVoltage_V()
@@ -65,19 +66,19 @@ if __name__ == '__main__':
             if is_waiting_for_recovery:
                 if p > LOW_PERCENT:
                     # 如果在5秒内恢复到高电量
-                    if time.time() - recovery_start_time <= 5:
-                        logging.info(f"🚀 5s内电量跳动，准备启动监测脚本...")
-                        logging.info(f"🚀 启动 `monitor_ups_reboot.py` 进行 20s 监测...")
-                        os.system(f"nohup python3 {MONITOR_SCRIPT} > {os.path.join(SCRIPT_DIR, 'ups_monitor.log')} 2>&1 &")
+                    if time.time() - recovery_start_time <= wait_time:
+                        logging.info(f"🚀 {wait_time}s内电量跳动，准备启动监测脚本...")
+                        logging.info(f"🚀 启动 `monitor_ups_reboot.py` 进行监测...")
+                        os.system(f"nohup python3 {MONITOR_SCRIPT} &")
                         is_waiting_for_recovery = False  # 重置等待状态
                     else:
                         # 如果恢复电量时间超过5秒
-                        logging.warning(f"⚠️ 电量恢复超过5秒，但未成功启动，重置状态。")
+                        logging.warning(f"⚠️ 电量恢复超过{wait_time}秒，但未成功启动，重置状态。")
                         is_waiting_for_recovery = False
 
             # 如果在低电量状态，但5秒内没有恢复，重置状态
-            if is_waiting_for_recovery and time.time() - recovery_start_time > 5:
-                logging.warning("⚠️ 低电量超过5秒，未恢复，重置状态。")
+            if is_waiting_for_recovery and time.time() - recovery_start_time > wait_time:
+                logging.warning("⚠️ 低电量超过{wait_time}秒，未恢复，重置状态。")
                 is_waiting_for_recovery = False
 
             last_percent = p  # 更新上次电量状态
